@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>模擬ヒアリング</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-2: #eef1f5;
+      --text: #1b2430;
+      --muted: #5b6776;
+      --line: #d9dfe7;
+      --accent: #1f6feb;
+      --accent-text: #ffffff;
+      --user-bg: #1f6feb;
+      --user-text: #ffffff;
+      --warn-bg: #fff4d6;
+      --warn-text: #6b4b00;
+      --danger-bg: #fde8e8;
+      --danger-text: #8a1c1c;
+      --ok-bg: #e3f5e9;
+      --ok-text: #14532d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f141a;
+        --surface: #18202a;
+        --surface-2: #212b37;
+        --text: #e8edf3;
+        --muted: #9aa7b6;
+        --line: #2c3745;
+        --accent: #5aa2ff;
+        --accent-text: #08111c;
+        --user-bg: #2a5fb8;
+        --user-text: #ffffff;
+        --warn-bg: #3a2f10;
+        --warn-text: #ffdf8a;
+        --danger-bg: #3d1c1c;
+        --danger-text: #ffb4b4;
+        --ok-bg: #12301f;
+        --ok-text: #a8e6bd;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+    [hidden] { display: none !important; }
+    button, input, textarea { font: inherit; color: inherit; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    header.top {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--line);
+    }
+    header.top h1 { margin: 0; font-size: 17px; letter-spacing: .02em; }
+    .who { color: var(--muted); font-size: 14px; }
+    .who b { color: var(--text); font-weight: 600; }
+
+    .notice {
+      margin: 0; padding: 8px 20px; font-size: 13px; color: var(--muted);
+      background: var(--surface); border-top: 1px solid var(--line);
+    }
+
+    /* ---- ログイン ---- */
+    .login-wrap { flex: 1; display: grid; place-items: center; padding: 24px 16px; }
+    .card {
+      width: min(440px, 100%); background: var(--surface); border: 1px solid var(--line);
+      border-radius: 14px; padding: 28px; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+    .card h2 { margin: 0 0 4px; font-size: 20px; }
+    .card p.lead { margin: 0 0 20px; color: var(--muted); }
+    label { display: block; margin: 14px 0 4px; font-weight: 600; font-size: 14px; }
+    .field {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+      background: var(--bg);
+    }
+    .field:focus { border-color: var(--accent); }
+    .btn {
+      appearance: none; border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
+      padding: 9px 14px; border-radius: 8px; cursor: pointer; font-weight: 600;
+    }
+    .btn:hover:not(:disabled) { filter: brightness(0.97); }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+    .btn.block { width: 100%; margin-top: 20px; padding: 11px 14px; }
+    .privacy {
+      margin-top: 18px; padding: 10px 12px; background: var(--warn-bg); color: var(--warn-text);
+      border-radius: 8px; font-size: 13px;
+    }
+    .form-error { margin-top: 12px; color: var(--danger-text); background: var(--danger-bg); padding: 8px 12px; border-radius: 8px; font-size: 14px; }
+
+    /* ---- チャット ---- */
+    .app { flex: 1; min-height: 0; display: grid; grid-template-columns: 250px 1fr; }
+    aside.side {
+      background: var(--surface); border-right: 1px solid var(--line); padding: 16px;
+      display: flex; flex-direction: column; gap: 14px; overflow-y: auto;
+    }
+    aside.side h2 { margin: 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+    .personas { display: flex; flex-direction: column; gap: 8px; }
+    .persona-btn {
+      text-align: left; width: 100%; padding: 10px 12px; border-radius: 10px; cursor: pointer;
+      border: 1px solid var(--line); background: var(--bg);
+    }
+    .persona-btn .name { display: block; font-weight: 600; }
+    .persona-btn .desc { display: block; font-size: 12px; color: var(--muted); }
+    .persona-btn[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--surface); }
+    .persona-btn:disabled { cursor: not-allowed; opacity: .6; }
+    .remaining { font-size: 14px; padding: 8px 12px; border-radius: 8px; background: var(--surface-2); }
+    .remaining.low { background: var(--warn-bg); color: var(--warn-text); }
+    .remaining.none { background: var(--danger-bg); color: var(--danger-text); }
+    .side-actions { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+    .side-actions a.btn { text-decoration: none; text-align: center; }
+    .side-actions a.btn[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+
+    main.chat { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+    .chat-head { padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
+    .chat-head .name { font-weight: 700; }
+    .chat-head .desc { color: var(--muted); font-size: 13px; }
+    .banner { margin: 0; padding: 10px 20px; font-size: 14px; }
+    .banner.error { background: var(--danger-bg); color: var(--danger-text); }
+    .banner.info { background: var(--ok-bg); color: var(--ok-text); }
+
+    .log { flex: 1; min-height: 0; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .empty { margin: auto; max-width: 420px; text-align: center; color: var(--muted); }
+    .msg { max-width: min(680px, 86%); display: flex; flex-direction: column; gap: 2px; }
+    .msg .who-label { font-size: 12px; color: var(--muted); }
+    .msg .bubble {
+      padding: 10px 14px; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere;
+      background: var(--surface); border: 1px solid var(--line); border-top-left-radius: 4px;
+    }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.user .bubble { background: var(--user-bg); border-color: var(--user-bg); color: var(--user-text); border-top-left-radius: 14px; border-top-right-radius: 4px; }
+    .typing { display: inline-flex; gap: 4px; align-items: center; height: 1.4em; }
+    .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite ease-in-out; }
+    .typing i:nth-child(2) { animation-delay: .2s; }
+    .typing i:nth-child(3) { animation-delay: .4s; }
+    @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
+
+    form.composer { display: flex; gap: 10px; align-items: flex-end; padding: 12px 20px 8px; background: var(--surface); border-top: 1px solid var(--line); }
+    .composer textarea { flex: 1; resize: none; min-height: 46px; max-height: 160px; }
+    .counter { font-size: 12px; color: var(--muted); text-align: right; padding: 0 20px 8px; background: var(--surface); }
+    .composer-wrap { background: var(--surface); }
+    .counter.over { color: var(--danger-text); font-weight: 700; }
+
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      aside.side { border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; align-items: center; padding: 10px 12px; gap: 8px; }
+      aside.side h2 { display: none; }
+      .personas { flex-direction: row; flex: 1 1 100%; }
+      .persona-btn { padding: 8px 10px; }
+      .persona-btn .desc { display: none; }
+      .side-actions { flex-direction: row; margin: 0; }
+      .msg { max-width: 94%; }
+      header.top { padding: 10px 12px; }
+      .log, .chat-head, .banner { padding-left: 12px; padding-right: 12px; }
+      form.composer { padding-left: 12px; padding-right: 12px; }
+      .counter { padding-right: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <h1>模擬ヒアリング</h1>
+    <div class="who" id="who" hidden>名前：<b id="who-name"></b></div>
+  </header>
+
+  <!-- 最初の画面: 合言葉と名前 -->
+  <section class="login-wrap" id="login-view" hidden>
+    <form class="card" id="login-form" autocomplete="off">
+      <h2>はじめに</h2>
+      <p class="lead">講師から伝えられた合言葉と、あなたの名前を入力してください。</p>
+      <label for="code">合言葉</label>
+      <input class="field" id="code" type="password" required autocomplete="off" spellcheck="false">
+      <label for="name">名前（ログの区別にだけ使います）</label>
+      <input class="field" id="name" type="text" required maxlength="30" autocomplete="off" placeholder="例：田中">
+      <p class="privacy">入力した内容は講師が確認します。個人情報や社外秘の情報は入力しないでください。</p>
+      <div class="form-error" id="login-error" role="alert" hidden></div>
+      <button class="btn primary block" id="login-submit" type="submit">はじめる</button>
+    </form>
+  </section>
+
+  <!-- チャット画面 -->
+  <div class="app" id="app-view" hidden>
+    <aside class="side">
+      <h2 id="persona-heading">相手を選ぶ</h2>
+      <div class="personas" id="personas" role="tablist" aria-labelledby="persona-heading"></div>
+      <div class="remaining" id="remaining" aria-live="polite"></div>
+      <div class="side-actions">
+        <button class="btn" id="reset-btn" type="button">やり直す</button>
+        <a class="btn" id="export-btn" href="#" download>会話を保存</a>
+      </div>
+    </aside>
+
+    <main class="chat">
+      <div class="chat-head">
+        <div class="name" id="chat-name"></div>
+        <div class="desc" id="chat-desc"></div>
+      </div>
+      <p class="banner error" id="banner" role="alert" hidden></p>
+      <div class="log" id="log" role="log" aria-live="polite" aria-label="会話"></div>
+      <div class="composer-wrap">
+        <form class="composer" id="composer">
+          <textarea class="field" id="input" rows="2" aria-label="質問を入力" placeholder="質問を入力（Enterで送信、Shift+Enterで改行）"></textarea>
+          <button class="btn primary" id="send" type="submit">送信</button>
+        </form>
+        <div class="counter" id="counter" aria-hidden="true"></div>
+      </div>
+    </main>
+  </div>
+
+  <p class="notice">※ 入力した内容は講師が確認します。個人情報や社外秘は入力しないでください。</p>
+
+  <script>
+    "use strict";
+
+    const $ = (id) => document.getElementById(id);
+    const els = {
+      loginView: $("login-view"), appView: $("app-view"), who: $("who"), whoName: $("who-name"),
+      loginForm: $("login-form"), code: $("code"), name: $("name"), loginError: $("login-error"), loginSubmit: $("login-submit"),
+      personas: $("personas"), remaining: $("remaining"), resetBtn: $("reset-btn"), exportBtn: $("export-btn"),
+      chatName: $("chat-name"), chatDesc: $("chat-desc"), banner: $("banner"), log: $("log"),
+      composer: $("composer"), input: $("input"), send: $("send"), counter: $("counter"),
+    };
+
+    const state = {
+      personas: [], maxTurns: 40, maxChars: 500,
+      current: null, busy: false,
+      // 相手ごとの会話。サーバーが正で、ここは表示用の写し / Per-persona copy for display; the server is the source of truth
+      convs: {},
+    };
+
+    const codePoints = (text) => Array.from(text).length;
+
+    async function api(path, options = {}) {
+      const res = await fetch(path, {
+        ...options,
+        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+      });
+      return res;
+    }
+
+    async function errorMessage(res) {
+      try {
+        const data = await res.json();
+        return data && data.error && data.error.message ? data.error.message : "エラーが発生しました。もう一度試してください";
+      } catch {
+        return "エラーが発生しました。もう一度試してください";
+      }
+    }
+
+    // ---------- 画面の切り替え ----------
+    function showLogin(message) {
+      els.appView.hidden = true;
+      els.who.hidden = true;
+      els.loginView.hidden = false;
+      els.loginError.hidden = !message;
+      els.loginError.textContent = message || "";
+      els.code.focus();
+    }
+
+    async function showApp(name) {
+      els.loginView.hidden = true;
+      els.appView.hidden = false;
+      els.who.hidden = false;
+      els.whoName.textContent = name;
+
+      const res = await api("/api/personas");
+      if (res.status === 401) return showLogin();
+      if (!res.ok) return showLogin(await errorMessage(res));
+      const data = await res.json();
+      state.personas = data.personas;
+      state.maxTurns = data.maxTurns;
+      state.maxChars = data.maxMessageChars;
+
+      await Promise.all(state.personas.map((p) => loadHistory(p.id)));
+      renderPersonas();
+      selectPersona(state.current && state.personas.some((p) => p.id === state.current) ? state.current : state.personas[0].id);
+    }
+
+    async function loadHistory(personaId) {
+      const res = await api(`/api/chat/${encodeURIComponent(personaId)}`);
+      if (res.status === 401) return showLogin();
+      if (!res.ok) return;
+      const data = await res.json();
+      state.convs[personaId] = { messages: data.messages, remaining: data.remaining };
+    }
+
+    // ---------- 描画 ----------
+    function renderPersonas() {
+      els.personas.textContent = "";
+      for (const persona of state.personas) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "persona-btn";
+        button.setAttribute("role", "tab");
+        button.dataset.id = persona.id;
+        const name = document.createElement("span");
+        name.className = "name";
+        name.textContent = persona.name;
+        const desc = document.createElement("span");
+        desc.className = "desc";
+        desc.textContent = persona.description;
+        button.append(name, desc);
+        button.addEventListener("click", () => selectPersona(persona.id));
+        els.personas.append(button);
+      }
+    }
+
+    function currentPersona() {
+      return state.personas.find((p) => p.id === state.current);
+    }
+
+    function selectPersona(id) {
+      if (state.busy) return;
+      state.current = id;
+      for (const button of els.personas.children) {
+        button.setAttribute("aria-selected", String(button.dataset.id === id));
+      }
+      const persona = currentPersona();
+      els.chatName.textContent = persona.name;
+      els.chatDesc.textContent = persona.description;
+      els.exportBtn.href = `/api/chat/${encodeURIComponent(id)}/export`;
+      hideBanner();
+      renderMessages();
+      renderRemaining();
+      els.input.focus();
+    }
+
+    function addMessageEl(role, text, pending) {
+      const wrap = document.createElement("div");
+      wrap.className = `msg ${role}`;
+      const label = document.createElement("div");
+      label.className = "who-label";
+      label.textContent = role === "user" ? "あなた" : currentPersona().name;
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      if (pending && !text) bubble.append(typingDots());
+      else bubble.textContent = text;
+      wrap.append(label, bubble);
+      els.log.append(wrap);
+      els.log.scrollTop = els.log.scrollHeight;
+      return bubble;
+    }
+
+    function typingDots() {
+      const dots = document.createElement("span");
+      dots.className = "typing";
+      dots.setAttribute("aria-label", "返答を作成中");
+      dots.append(document.createElement("i"), document.createElement("i"), document.createElement("i"));
+      return dots;
+    }
+
+    function renderMessages() {
+      els.log.textContent = "";
+      const conv = state.convs[state.current];
+      if (!conv || conv.messages.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = `${currentPersona().name}に、資料に書かれていないことを質問してみましょう。`;
+        els.log.append(empty);
+        return;
+      }
+      for (const message of conv.messages) addMessageEl(message.role, message.text, false);
+    }
+
+    function renderRemaining() {
+      const conv = state.convs[state.current];
+      const remaining = conv ? conv.remaining : state.maxTurns;
+      els.remaining.textContent = remaining > 0 ? `残り：${remaining}回` : "上限に達しました";
+      els.remaining.className = `remaining${remaining === 0 ? " none" : remaining <= 5 ? " low" : ""}`;
+      updateControls();
+    }
+
+    function updateControls() {
+      const conv = state.convs[state.current];
+      const remaining = conv ? conv.remaining : state.maxTurns;
+      const length = codePoints(els.input.value.trim());
+      const tooLong = length > state.maxChars;
+      els.counter.textContent = `${length} / ${state.maxChars}`;
+      els.counter.classList.toggle("over", tooLong);
+      els.send.disabled = state.busy || remaining === 0 || length === 0 || tooLong;
+      els.input.disabled = state.busy || remaining === 0;
+      els.input.placeholder = remaining === 0
+        ? "この相手との往復の上限に達しました。「やり直す」で最初から始められます"
+        : "質問を入力（Enterで送信、Shift+Enterで改行）";
+      els.resetBtn.disabled = state.busy;
+      for (const button of els.personas.children) button.disabled = state.busy;
+      const hasMessages = Boolean(conv && conv.messages.length > 0);
+      els.exportBtn.setAttribute("aria-disabled", String(!hasMessages || state.busy));
+    }
+
+    function showBanner(message) {
+      els.banner.textContent = message;
+      els.banner.hidden = false;
+    }
+    function hideBanner() {
+      els.banner.hidden = true;
+      els.banner.textContent = "";
+    }
+
+    // ---------- 送信（SSEを読む） ----------
+    async function sendMessage() {
+      const text = els.input.value.trim();
+      const personaId = state.current;
+      if (!text || state.busy) return;
+
+      hideBanner();
+      state.busy = true;
+      updateControls();
+
+      // 初回は案内文を消す / drop the empty-state hint on first message
+      const empty = els.log.querySelector(".empty");
+      if (empty) empty.remove();
+      addMessageEl("user", text, false);
+      const bubble = addMessageEl("assistant", "", true);
+      let streamed = "";
+      let finished = false;
+
+      try {
+        const res = await api(`/api/chat/${encodeURIComponent(personaId)}`, {
+          method: "POST",
+          body: JSON.stringify({ message: text }),
+        });
+
+        if (res.status === 401) {
+          showLogin("接続が切れました。もう一度、合言葉と名前を入力してください。");
+          return;
+        }
+        const type = res.headers.get("content-type") || "";
+        if (!res.ok || !type.includes("text/event-stream")) {
+          throw new Error(await errorMessage(res));
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        const handle = (event, data) => {
+          if (event === "delta") {
+            streamed += data.text;
+            bubble.textContent = streamed;
+            els.log.scrollTop = els.log.scrollHeight;
+          } else if (event === "reset") {
+            streamed = "";
+            bubble.textContent = "";
+            bubble.append(typingDots());
+          } else if (event === "done") {
+            finished = true;
+            bubble.textContent = data.text;
+            const conv = state.convs[personaId] || { messages: [], remaining: state.maxTurns };
+            conv.messages.push({ role: "user", text }, { role: "assistant", text: data.text });
+            conv.remaining = data.remaining;
+            state.convs[personaId] = conv;
+            els.input.value = "";
+            els.input.style.height = "auto";
+          } else if (event === "error") {
+            throw new Error(data.message);
+          }
+        };
+
+        for (;;) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let boundary;
+          while ((boundary = buffer.indexOf("\n\n")) !== -1) {
+            const block = buffer.slice(0, boundary);
+            buffer = buffer.slice(boundary + 2);
+            const eventLine = block.split("\n").find((line) => line.startsWith("event:"));
+            const dataLine = block.split("\n").find((line) => line.startsWith("data:"));
+            if (!eventLine || !dataLine) continue;
+            handle(eventLine.slice(6).trim(), JSON.parse(dataLine.slice(5).trim()));
+          }
+        }
+        if (!finished) throw new Error("通信が途切れました。もう一度送ってください");
+      } catch (error) {
+        // 失敗した発言は履歴に残らない。入力欄へ戻して、サーバーの状態に表示を合わせる
+        // A failed message is not persisted: put it back in the box and re-sync the view with the server
+        showBanner(error instanceof Error ? error.message : "エラーが発生しました。もう一度送ってください");
+        await loadHistory(personaId);
+      } finally {
+        state.busy = false;
+        if (state.current === personaId) {
+          renderMessages();
+          renderRemaining();
+          els.input.focus();
+        }
+        updateControls();
+      }
+    }
+
+    // ---------- 操作 ----------
+    els.loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      els.loginSubmit.disabled = true;
+      els.loginError.hidden = true;
+      try {
+        const res = await api("/api/session", {
+          method: "POST",
+          body: JSON.stringify({ code: els.code.value, name: els.name.value }),
+        });
+        if (!res.ok) {
+          els.loginError.textContent = await errorMessage(res);
+          els.loginError.hidden = false;
+          return;
+        }
+        const data = await res.json();
+        els.code.value = "";
+        await showApp(data.name);
+      } catch {
+        els.loginError.textContent = "通信に失敗しました。もう一度試してください";
+        els.loginError.hidden = false;
+      } finally {
+        els.loginSubmit.disabled = false;
+      }
+    });
+
+    els.composer.addEventListener("submit", (event) => {
+      event.preventDefault();
+      sendMessage();
+    });
+
+    els.input.addEventListener("input", () => {
+      updateControls();
+      els.input.style.height = "auto";
+      els.input.style.height = `${Math.min(els.input.scrollHeight, 160)}px`;
+    });
+
+    els.input.addEventListener("keydown", (event) => {
+      // 日本語入力の変換確定のEnterでは送信しない / Do not send on the Enter that confirms IME composition
+      if (event.key === "Enter" && !event.shiftKey && !event.isComposing && event.keyCode !== 229) {
+        event.preventDefault();
+        if (!els.send.disabled) sendMessage();
+      }
+    });
+
+    els.resetBtn.addEventListener("click", async () => {
+      const persona = currentPersona();
+      if (!persona || state.busy) return;
+      if (!window.confirm(`「${persona.name}」との会話を最初からやり直しますか？\nこれまでの会話は画面から消えます（講師の記録には残ります）。`)) return;
+      const res = await api(`/api/chat/${encodeURIComponent(persona.id)}/reset`, { method: "POST", body: "{}" });
+      if (res.status === 401) return showLogin();
+      if (!res.ok) return showBanner(await errorMessage(res));
+      const data = await res.json();
+      state.convs[persona.id] = { messages: [], remaining: data.remaining };
+      hideBanner();
+      renderMessages();
+      renderRemaining();
+    });
+
+    els.exportBtn.addEventListener("click", (event) => {
+      if (els.exportBtn.getAttribute("aria-disabled") === "true") event.preventDefault();
+    });
+
+    // ---------- 起動 ----------
+    (async function init() {
+      try {
+        const res = await api("/api/session");
+        if (res.ok) {
+          const data = await res.json();
+          await showApp(data.name);
+        } else {
+          showLogin();
+        }
+      } catch {
+        showLogin("通信に失敗しました。ページを開き直してください");
+      }
+    })();
+  </script>
+</body>
+</html>

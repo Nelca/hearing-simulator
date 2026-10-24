@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>模擬ヒアリング 講師の画面</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-2: #eef1f5;
+      --text: #1b2430;
+      --muted: #5b6776;
+      --line: #d9dfe7;
+      --accent: #1f6feb;
+      --accent-text: #ffffff;
+      --user-bg: #1f6feb;
+      --user-text: #ffffff;
+      --warn-bg: #fff4d6;
+      --warn-text: #6b4b00;
+      --danger: #c62828;
+      --danger-bg: #fde8e8;
+      --danger-text: #8a1c1c;
+      --ok-bg: #e3f5e9;
+      --ok-text: #14532d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f141a; --surface: #18202a; --surface-2: #212b37; --text: #e8edf3; --muted: #9aa7b6;
+        --line: #2c3745; --accent: #5aa2ff; --accent-text: #08111c; --user-bg: #2a5fb8; --user-text: #ffffff;
+        --warn-bg: #3a2f10; --warn-text: #ffdf8a; --danger: #ef5350; --danger-bg: #3d1c1c; --danger-text: #ffb4b4;
+        --ok-bg: #12301f; --ok-text: #a8e6bd;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
+    }
+    [hidden] { display: none !important; }
+    button, input, a { font: inherit; color: inherit; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--line); }
+    header.top h1 { margin: 0; font-size: 17px; }
+    .muted { color: var(--muted); }
+    .btn {
+      appearance: none; border: 1px solid var(--line); background: var(--surface-2); color: var(--text);
+      padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block;
+    }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+    .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .field { padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+
+    .login-wrap { display: grid; place-items: center; min-height: 70vh; padding: 24px 16px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+    .login-card { width: min(420px, 100%); padding: 28px; }
+    .login-card h2 { margin: 0 0 16px; font-size: 20px; }
+    .login-card label { display: block; margin: 0 0 4px; font-weight: 600; font-size: 14px; }
+    .login-card .field { width: 100%; }
+    .login-card .btn { width: 100%; margin-top: 16px; padding: 11px; }
+    .form-error { margin-top: 12px; color: var(--danger-text); background: var(--danger-bg); padding: 8px 12px; border-radius: 8px; font-size: 14px; }
+
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 20px; display: grid; gap: 16px; }
+    .banner { padding: 12px 16px; border-radius: 10px; font-weight: 600; }
+    .banner.danger { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger); }
+    .banner.warn { background: var(--warn-bg); color: var(--warn-text); }
+    .banner small { display: block; font-weight: 400; margin-top: 2px; overflow-wrap: anywhere; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .card h2 { margin: 0 0 10px; font-size: 14px; color: var(--muted); font-weight: 600; }
+    .big { font-size: 26px; font-weight: 700; line-height: 1.2; }
+    .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 14px; margin-top: 10px; }
+    .kv dt { color: var(--muted); }
+    .kv dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+    .bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin-top: 10px; }
+    .bar > i { display: block; height: 100%; background: var(--accent); }
+    .bar.hot > i { background: var(--danger); }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+    .split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 600; font-size: 13px; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover, tbody tr[aria-selected="true"] { background: var(--surface-2); }
+    tbody tr:focus-visible { outline-offset: -3px; }
+    .empty { padding: 18px 6px; color: var(--muted); }
+
+    .transcript { max-height: 70vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .msg { max-width: 92%; display: flex; flex-direction: column; gap: 2px; }
+    .msg .who-label { font-size: 12px; color: var(--muted); }
+    .msg .bubble { padding: 9px 13px; border-radius: 12px; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface-2); border: 1px solid var(--line); }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.user .bubble { background: var(--user-bg); border-color: var(--user-bg); color: var(--user-text); }
+
+    @media (max-width: 860px) { .split { grid-template-columns: 1fr; } .wrap { padding: 12px; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <h1>模擬ヒアリング　講師の画面</h1>
+    <button class="btn" id="logout" type="button" hidden>退出</button>
+  </header>
+
+  <section class="login-wrap" id="login-view" hidden>
+    <form class="card login-card" id="login-form" autocomplete="off">
+      <h2>講師用の合言葉</h2>
+      <label for="code">管理用の合言葉</label>
+      <input class="field" id="code" type="password" required autocomplete="off" spellcheck="false">
+      <div class="form-error" id="login-error" role="alert" hidden></div>
+      <button class="btn primary" id="login-submit" type="submit">入室</button>
+    </form>
+  </section>
+
+  <div class="wrap" id="dash-view" hidden>
+    <div class="banner danger" id="provider-error" role="alert" hidden></div>
+    <div class="banner danger" id="limit-banner" role="alert" hidden>1日のトークン上限に達しました。全員の送信が止まっています。</div>
+    <div class="banner warn" id="stopped-banner" hidden>いま全員の送信を止めています。</div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>今日の使用量（<span id="date"></span>）</h2>
+        <div class="big" id="cost">—</div>
+        <div class="muted" style="font-size:13px">概算の金額（公式の単価から計算した目安）</div>
+        <dl class="kv">
+          <dt>入力</dt><dd id="u-input">—</dd>
+          <dt>　うちキャッシュ読み</dt><dd id="u-cache-read">—</dd>
+          <dt>　うちキャッシュ書き込み</dt><dd id="u-cache-write">—</dd>
+          <dt>出力</dt><dd id="u-output">—</dd>
+          <dt>リクエスト数</dt><dd id="u-requests">—</dd>
+        </dl>
+      </section>
+
+      <section class="card">
+        <h2>1日の上限（入力＋出力）</h2>
+        <div class="big"><span id="limit-used">—</span> <span class="muted" style="font-size:15px">/ <span id="limit-max">—</span></span></div>
+        <div class="bar" id="limit-bar" role="progressbar" aria-label="1日のトークン上限に対する使用割合" aria-valuemin="0" aria-valuemax="100"><i id="limit-fill" style="width:0%"></i></div>
+        <dl class="kv">
+          <dt>往復の上限</dt><dd><span id="max-turns">—</span> 回 / 1人・1相手</dd>
+        </dl>
+      </section>
+
+      <section class="card">
+        <h2>稼働状況</h2>
+        <dl class="kv" style="margin-top:0">
+          <dt>AI</dt><dd id="provider">—</dd>
+          <dt>モデル</dt><dd id="model">—</dd>
+          <dt>保存先</dt><dd id="storage">—</dd>
+        </dl>
+        <div class="actions" style="margin-top:14px">
+          <button class="btn danger" id="stop-btn" type="button">全員の送信を止める</button>
+        </div>
+        <div class="actions" style="margin-top:10px">
+          <input class="field" id="log-date" type="date" aria-label="ログの日付">
+          <a class="btn" id="log-link" href="#" download>ログをダウンロード</a>
+        </div>
+      </section>
+    </div>
+
+    <div class="split">
+      <section class="card">
+        <h2>参加者の会話（<span id="conv-count">0</span>件・5秒ごとに更新）</h2>
+        <table>
+          <thead><tr><th>参加者</th><th>相手</th><th class="num">往復</th><th>最後の発言</th></tr></thead>
+          <tbody id="conv-rows"></tbody>
+        </table>
+        <div class="empty" id="conv-empty" hidden>まだ会話はありません。</div>
+      </section>
+
+      <section class="card">
+        <h2 id="transcript-title">会話の全文</h2>
+        <div class="transcript" id="transcript"><div class="empty">左の一覧から会話を選んでください。</div></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    const $ = (id) => document.getElementById(id);
+    const fmt = new Intl.NumberFormat("ja-JP");
+    let selected = null; // { participantId, personaId }
+    let timer = null;
+
+    async function api(path, options = {}) {
+      return fetch(path, { ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } });
+    }
+    async function errorMessage(res) {
+      try { const d = await res.json(); return d.error && d.error.message ? d.error.message : "エラーが発生しました"; } catch { return "エラーが発生しました"; }
+    }
+
+    function showLogin(message) {
+      clearInterval(timer);
+      $("dash-view").hidden = true;
+      $("logout").hidden = true;
+      $("login-view").hidden = false;
+      $("login-error").hidden = !message;
+      $("login-error").textContent = message || "";
+      $("code").focus();
+    }
+
+    function showDashboard() {
+      $("login-view").hidden = true;
+      $("dash-view").hidden = false;
+      $("logout").hidden = false;
+      $("log-date").value = new Date().toLocaleDateString("sv-SE");
+      updateLogLink();
+      refresh();
+      clearInterval(timer);
+      timer = setInterval(refresh, 5000);
+    }
+
+    function updateLogLink() {
+      $("log-link").href = `/api/admin/logs?date=${encodeURIComponent($("log-date").value)}`;
+    }
+
+    async function refresh() {
+      const [statusRes, convRes] = await Promise.all([api("/api/admin/status"), api("/api/admin/conversations")]);
+      if (statusRes.status === 401 || convRes.status === 401) return showLogin("もう一度、管理用の合言葉を入力してください");
+      if (statusRes.ok) renderStatus(await statusRes.json());
+      if (convRes.ok) renderConversations((await convRes.json()).conversations);
+      if (selected) loadTranscript(false);
+    }
+
+    function renderStatus(s) {
+      $("date").textContent = s.date;
+      $("cost").textContent = s.estimatedCostUsd === null ? "単価不明" : `$${s.estimatedCostUsd.toFixed(2)}`;
+      $("u-input").textContent = fmt.format(s.usage.inputTokens + s.usage.cacheReadTokens + s.usage.cacheWriteTokens);
+      $("u-cache-read").textContent = fmt.format(s.usage.cacheReadTokens);
+      $("u-cache-write").textContent = fmt.format(s.usage.cacheWriteTokens);
+      $("u-output").textContent = fmt.format(s.usage.outputTokens);
+      $("u-requests").textContent = fmt.format(s.usage.requests);
+
+      const ratio = Math.min(100, Math.round((s.usage.totalTokens / s.dailyTokenLimit) * 100));
+      $("limit-used").textContent = fmt.format(s.usage.totalTokens);
+      $("limit-max").textContent = fmt.format(s.dailyTokenLimit);
+      $("limit-fill").style.width = `${ratio}%`;
+      $("limit-bar").setAttribute("aria-valuenow", String(ratio));
+      $("limit-bar").classList.toggle("hot", ratio >= 80);
+      $("max-turns").textContent = s.maxTurns;
+
+      $("provider").textContent = s.provider;
+      $("model").textContent = s.model;
+      $("storage").textContent = s.storage === "redis" ? "Redis" : "メモリ（再起動で消える）";
+
+      $("limit-banner").hidden = !s.limitReached;
+      $("stopped-banner").hidden = !s.stopped;
+      const stopBtn = $("stop-btn");
+      stopBtn.textContent = s.stopped ? "送信を再開する" : "全員の送信を止める";
+      stopBtn.className = s.stopped ? "btn primary" : "btn danger";
+      stopBtn.dataset.stopped = String(s.stopped);
+
+      const err = $("provider-error");
+      err.hidden = !s.providerError;
+      err.textContent = "";
+      if (s.providerError) {
+        err.append("AIの呼び出しに失敗しています（APIキー・残高・モデル名を確認してください）");
+        const small = document.createElement("small");
+        small.textContent = `${new Date(s.providerError.at).toLocaleTimeString("ja-JP")}　${s.providerError.message}`;
+        err.append(small);
+      }
+    }
+
+    function renderConversations(rows) {
+      $("conv-count").textContent = rows.length;
+      $("conv-empty").hidden = rows.length > 0;
+      const body = $("conv-rows");
+      body.textContent = "";
+      for (const row of rows) {
+        const tr = document.createElement("tr");
+        tr.tabIndex = 0;
+        const isSelected = selected && selected.participantId === row.participantId && selected.personaId === row.personaId;
+        tr.setAttribute("aria-selected", String(Boolean(isSelected)));
+        const cells = [row.name, row.personaName, String(row.turns), new Date(row.lastAt).toLocaleTimeString("ja-JP")];
+        cells.forEach((text, i) => {
+          const td = document.createElement("td");
+          if (i === 2) td.className = "num";
+          td.textContent = text;
+          tr.append(td);
+        });
+        const open = () => { selected = { participantId: row.participantId, personaId: row.personaId, name: row.name, personaName: row.personaName }; loadTranscript(true); refresh(); };
+        tr.addEventListener("click", open);
+        tr.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+        body.append(tr);
+      }
+    }
+
+    async function loadTranscript(scrollToEnd) {
+      if (!selected) return;
+      const res = await api(`/api/admin/conversations/${encodeURIComponent(selected.participantId)}/${encodeURIComponent(selected.personaId)}`);
+      const box = $("transcript");
+      if (res.status === 404) {
+        box.textContent = "";
+        const note = document.createElement("div");
+        note.className = "empty";
+        note.textContent = "この会話は、参加者が「やり直す」で消しました（ログには残っています）。";
+        box.append(note);
+        return;
+      }
+      if (!res.ok) return;
+      const data = await res.json();
+      $("transcript-title").textContent = `${data.name} ↔ ${data.personaName}（${data.turns}往復）`;
+      const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+      box.textContent = "";
+      for (const m of data.messages) {
+        const wrap = document.createElement("div");
+        wrap.className = `msg ${m.role}`;
+        const label = document.createElement("div");
+        label.className = "who-label";
+        label.textContent = `${m.role === "user" ? data.name : data.personaName}　${new Date(m.at).toLocaleTimeString("ja-JP")}`;
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.textContent = m.text;
+        wrap.append(label, bubble);
+        box.append(wrap);
+      }
+      if (scrollToEnd || nearBottom) box.scrollTop = box.scrollHeight;
+    }
+
+    $("login-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      $("login-submit").disabled = true;
+      try {
+        const res = await api("/api/admin/login", { method: "POST", body: JSON.stringify({ code: $("code").value }) });
+        if (!res.ok) { $("login-error").textContent = await errorMessage(res); $("login-error").hidden = false; return; }
+        $("code").value = "";
+        showDashboard();
+      } catch {
+        $("login-error").textContent = "通信に失敗しました"; $("login-error").hidden = false;
+      } finally {
+        $("login-submit").disabled = false;
+      }
+    });
+
+    $("stop-btn").addEventListener("click", async () => {
+      const stopping = $("stop-btn").dataset.stopped !== "true";
+      if (stopping && !window.confirm("全員の送信を止めます。よろしいですか？（あとで再開できます）")) return;
+      await api("/api/admin/stop", { method: "POST", body: JSON.stringify({ stopped: stopping }) });
+      refresh();
+    });
+
+    $("log-date").addEventListener("change", updateLogLink);
+    $("logout").addEventListener("click", async () => { await api("/api/admin/logout", { method: "POST", body: "{}" }); showLogin(); });
+
+    (async function init() {
+      const res = await api("/api/admin/status");
+      if (res.ok) showDashboard(); else showLogin();
+    })();
+  </script>
+</body>
+</html>

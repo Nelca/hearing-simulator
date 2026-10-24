@@ -1,0 +1,14 @@
+[
+  {
+    "id": "b-company",
+    "name": "B社 山田さん",
+    "description": "要望を出した顧客（サステナビリティ推進室 課長）",
+    "file": "b-company.md"
+  },
+  {
+    "id": "cs",
+    "name": "CS 佐藤さん",
+    "description": "チケットを起票したカスタマーサクセス担当",
+    "file": "cs.md"
+  }
+]
