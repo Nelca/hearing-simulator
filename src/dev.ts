@@ -3,7 +3,7 @@
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
-import { createApp } from "./app.js";
+import { createApp } from "./routes.js";
 import { ConfigError } from "./config.js";
 import { resolveRuntimeDeps } from "./runtime.js";
 

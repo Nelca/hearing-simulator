@@ -1,4 +1,4 @@
-import { defaultLogSink, type Deps } from "./app.js";
+import { defaultLogSink, type Deps } from "./routes.js";
 import { ConfigError, loadConfig } from "./config.js";
 import { createProvider } from "./providers/index.js";
 import { createStore } from "./store/index.js";

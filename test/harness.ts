@@ -1,4 +1,4 @@
-import { createApp, type Deps } from "../src/app.js";
+import { createApp, type Deps } from "../src/routes.js";
 import type { Config } from "../src/config.js";
 import { MemoryLogSink } from "../src/logs.js";
 import { createMockProvider } from "../src/providers/mock.js";

@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { installFakeUpstash } from "./fake-upstash.js";
 import { parseSse } from "./harness.js";
@@ -76,5 +77,27 @@ describe("Vercel の入口（src/index.ts）", () => {
     const res = await app.request("/api/session");
     expect(res.status).toBe(500);
     expect(((await res.json()) as { error: { code: string } }).error.code).toBe("misconfigured");
+  });
+});
+
+// Vercel は、次の名前のファイルのうち「hono を import している最初の1つ」を入口にする（@vercel/backends の規則）。
+// 他のファイルが先に当たると、default export が無くて起動に失敗する（"The default export must be a function or server"）。
+// Vercel picks the first file among these names that imports hono. If another file matches first, the function fails to start.
+describe("Vercel の入口の検出 / entrypoint detection", () => {
+  it("hono を import する入口の候補は src/index.ts だけ / only src/index.ts is a Hono entrypoint candidate", () => {
+    const names = ["app", "index", "server", "src/app", "src/index", "src/server", "main", "src/main"];
+    const extensions = ["js", "cjs", "mjs", "ts", "cts", "mts"];
+    const importsHono = /(?:from|require|import)\s*(?:\(\s*)?["']hono["']\s*(?:\))?/;
+
+    const matches = names
+      .flatMap((name) => extensions.map((extension) => `${name}.${extension}`))
+      .filter((file) => existsSync(file) && importsHono.test(readFileSync(file, "utf8")));
+
+    expect(matches).toEqual(["src/index.ts"]);
+  });
+
+  it("入口は default export で fetch を持つ Hono アプリ / the entrypoint default-exports a Hono app with fetch", async () => {
+    const module = await import("../src/index.js");
+    expect(typeof module.default.fetch).toBe("function");
   });
 });

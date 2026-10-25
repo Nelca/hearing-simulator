@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ConfigError } from "../src/config.js";
-import { createApp } from "../src/app.js";
+import { createApp } from "../src/routes.js";
 import { PERSONAS } from "../src/generated/personas.js";
 import { ProviderFailure, type ChatProvider, type StreamReplyInput } from "../src/providers/index.js";
 import { ACCESS_CODE, makeHarness } from "./harness.js";
