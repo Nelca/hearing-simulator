@@ -450,3 +450,43 @@ describe("会話の保存とログ / export and logs", () => {
     expect((await h.get("/api/admin/logs?date=../../etc/passwd", admin.cookie)).status).toBe(400);
   });
 });
+
+describe("画面の配信 / screens", () => {
+  it("/ と /admin は合言葉なしで開け、セキュリティヘッダが付く / both screens open without a session and carry security headers", async () => {
+    const h = makeHarness();
+    for (const path of ["/", "/admin"]) {
+      const res = await h.app.request(path);
+      expect(res.status, path).toBe(200);
+      expect(res.headers.get("content-type"), path).toContain("text/html");
+      expect(res.headers.get("content-security-policy"), path).toContain("default-src 'self'");
+      expect(res.headers.get("x-content-type-options"), path).toBe("nosniff");
+      expect(res.headers.get("x-robots-tag"), path).toContain("noindex");
+    }
+    expect(await (await h.app.request("/")).text()).toContain("模擬ヒアリング");
+    expect(await (await h.app.request("/admin")).text()).toContain("講師の画面");
+  });
+
+  it("API（SSEを含む）の応答にも同じヘッダが付く / API and SSE responses carry the headers too", async () => {
+    const h = makeHarness();
+    const { cookie } = await h.login();
+    const { res } = await h.chat(cookie, "b-company", "ご要望を教えてください");
+    expect(res.headers.get("content-type")).toContain("text/event-stream");
+    expect(res.headers.get("content-security-policy")).toContain("default-src 'self'");
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+  });
+
+  it("設定が足りなくても画面は開け、APIだけが設定エラーを返す / the screens still open when configuration is missing; only the API reports it", async () => {
+    const app = createApp(() => {
+      throw new ConfigError(["ANTHROPIC_API_KEY is required"]);
+    });
+    expect((await app.request("/")).status).toBe(200);
+    expect((await app.request("/admin")).status).toBe(200);
+    expect((await app.request("/api/session")).status).toBe(500);
+  });
+
+  it("存在しないパスは404 / unknown paths are 404", async () => {
+    const h = makeHarness();
+    expect((await h.app.request("/index.html")).status).toBe(404);
+    expect((await h.app.request("/nothing")).status).toBe(404);
+  });
+});

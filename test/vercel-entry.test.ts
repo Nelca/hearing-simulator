@@ -100,4 +100,13 @@ describe("Vercel の入口の検出 / entrypoint detection", () => {
     const module = await import("../src/index.js");
     expect(typeof module.default.fetch).toBe("function");
   });
+
+  it("入口のアプリが / と /admin の画面を返す（Vercel の静的配信に頼らない）/ the entrypoint app serves the screens itself", async () => {
+    const { default: app } = await import("../src/index.js");
+    for (const [path, text] of [["/", "模擬ヒアリング"], ["/admin", "講師の画面"]] as const) {
+      const res = await app.request(path);
+      expect(res.status, path).toBe(200);
+      expect(await res.text(), path).toContain(text);
+    }
+  });
 });

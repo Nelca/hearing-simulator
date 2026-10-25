@@ -86,6 +86,12 @@ describe("概算金額 / cost estimate", () => {
   });
 });
 
+describe("画面 / pages", () => {
+  it("生成物が pages/*.html と一致している（直したら `pnpm pages`）/ generated file matches the HTML sources", () => {
+    expect(() => execFileSync("node", ["scripts/build-pages.mjs", "--check"], { stdio: "pipe" })).not.toThrow();
+  });
+});
+
 describe("人物設定 / personas", () => {
   it("生成物が personas/*.md と一致している（直したら `pnpm personas`）/ generated file matches the markdown sources", () => {
     expect(() => execFileSync("node", ["scripts/build-personas.mjs", "--check"], { stdio: "pipe" })).not.toThrow();
@@ -101,13 +107,14 @@ describe("人物設定 / personas", () => {
     }
   });
 
-  it("実在の社名が人物設定に入っていない / no real company name in the personas", () => {
+  it("実在の社名が人物設定と画面に入っていない / no real company name in the personas or the pages", () => {
     // 検査する語そのものをリポジトリに残さないよう、エスケープで書く
     // Written as escapes so the checked words themselves are not stored in the repository
     const forbidden = [/\u30a2\u30b9\u30a8\u30cd/, /\u0061suene/i, /\u0065arthene/i, /\u0072efutures/i];
     const texts = [
       ...listPersonas().flatMap((persona) => [persona.name, persona.description, persona.systemPrompt]),
       ...readdirSync("personas").map((file) => readFileSync(join("personas", file), "utf8")),
+      ...readdirSync("pages").map((file) => readFileSync(join("pages", file), "utf8")),
     ];
     for (const text of texts) {
       for (const pattern of forbidden) expect(text).not.toMatch(pattern);

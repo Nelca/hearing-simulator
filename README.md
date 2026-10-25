@@ -3,7 +3,7 @@
 AI要件定義ハンズオンで、参加者が「要望を出したB社の担当者（山田さん）」と「チケットを起票したCS（佐藤さん）」にヒアリングできる簡易チャットです。資料に書かれていないことを、自分で聞き出す練習に使います。
 
 - サーバー: Node.js 22.9 以上 / TypeScript / [Hono](https://hono.dev)
-- 画面: 素のHTML・CSS・JavaScript（`public/`、ビルド不要）
+- 画面: 素のHTML・CSS・JavaScript（`pages/`。ビルド時にTypeScriptへ埋め込み、サーバーのルートから返す）
 - AI: Claude（`@anthropic-ai/sdk`）または OpenAI（`openai`）。環境変数で切り替え
 - 逐次表示: Server-Sent Events
 - 動かす場所: **Vercel**（手元のPCでも動く）
@@ -111,6 +111,10 @@ Vercel の関数は、リクエストごとに別のインスタンスで動く�
 - 相手を増やすときは、`personas/` にmdを足して、`personas/personas.json` に1件足すだけです（`id` は英小文字・数字・ハイフン）。
 - 日時などの毎回変わる文字列を人物設定に入れないでください。Claude のキャッシュが効かなくなります。
 
+## 画面の直し方
+
+`pages/index.html`（参加者）と `pages/admin.html`（講師）を直したら `pnpm pages` を実行し、生成された `src/generated/pages.ts` と一緒にコミットします（`pnpm dev` / `pnpm test` / `pnpm build` は実行前に自動で生成します）。生成物がHTMLと食い違っていると、テストが落ちます。
+
 ## API
 
 | メソッドとパス | 中身 |
@@ -133,7 +137,7 @@ Vercel で動かすことに合わせて、次を変えています。
 | 会話はサーバーのメモリ | Redis（ローカルはメモリ） | Vercel の関数はリクエストごとに別インスタンスになりうる |
 | ログはファイル | Redis のリスト（ローカルはファイル）＋講師の画面から JSONL をダウンロード | 関数のファイルシステムは残らない |
 | 人物設定は起動時にファイルから読む | ビルド時に `src/generated/` へ埋め込む | 関数にmdが同梱される保証がない |
-| 画面はサーバーが配信 | Vercel では `public/` を CDN が配信（`cleanUrls` で `/admin`） | Vercel の仕様 |
+| 画面はサーバーが配信 | 画面も関数のルート（`/` と `/admin`）から返す。`pages/*.html` をビルド時に `src/generated/pages.ts` へ埋め込む | Vercel の `public/` 静的配信に頼らず、ローカルと同じ経路で動かすため |
 | `GET /api/chat/:personaId` なし | 追加 | 再読み込みで履歴を戻すため |
 | 停止のみ | 再開もできる | 誤操作の取り消し |
 | — | 同じ会話への同時送信を409で止める | 複数タブ・二重送信で履歴が壊れないように |

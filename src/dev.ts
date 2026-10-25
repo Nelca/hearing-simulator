@@ -1,7 +1,6 @@
-// ローカル実行の入口。Vercel と違い、画面（public/）もこのサーバーが配信する
-// Local entrypoint. Unlike Vercel, this server also serves the screens in public/.
+// ローカル実行の入口。Vercel の入口（src/index.ts）と同じアプリを、Node のサーバーで動かす
+// Local entrypoint: runs the same app as the Vercel entrypoint (src/index.ts) on a Node server.
 import { serve } from "@hono/node-server";
-import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { createApp } from "./routes.js";
 import { ConfigError } from "./config.js";
@@ -21,21 +20,7 @@ try {
 }
 
 const app = new Hono();
-
-// vercel.json の headers と同じ内容 / Mirrors the headers in vercel.json
-app.use("*", async (c, next) => {
-  await next();
-  c.header(
-    "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
-  );
-  c.header("X-Content-Type-Options", "nosniff");
-  c.header("Referrer-Policy", "no-referrer");
-});
-
 app.route("/", createApp(resolveRuntimeDeps));
-app.get("/admin", serveStatic({ path: "./public/admin.html" }));
-app.use("/*", serveStatic({ root: "./public" }));
 
 const port = Number(process.env.PORT) || 3000;
 serve({ fetch: app.fetch, port }, () => {

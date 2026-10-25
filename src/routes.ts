@@ -11,6 +11,7 @@ import {
   safeEqual,
 } from "./auth.js";
 import { ConfigError, MAX_MESSAGE_CHARS, type Config } from "./config.js";
+import { ADMIN_HTML, INDEX_HTML } from "./generated/pages.js";
 import { FileLogSink, StoreLogSink, type LogEntry, type LogSink } from "./logs.js";
 import { findPersona, listPersonas, toPublicPersona } from "./personas.js";
 import { estimateCostUsd } from "./pricing.js";
@@ -57,6 +58,11 @@ const MESSAGES = {
 
 const codePoints = (text: string) => [...text].length;
 
+// 画面はインラインのscript/styleを使う1ファイルのHTML。外部への通信は自分のサーバーだけに限る
+// The screens are single-file HTML with inline script/style; connections are limited to this server.
+const CONTENT_SECURITY_POLICY =
+  "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
+
 function jsonError(c: Context, status: 400 | 401 | 403 | 404 | 409 | 429 | 500, code: string, message: string) {
   return c.json({ error: { code, message } }, status);
 }
@@ -102,6 +108,25 @@ export function createApp(resolveDeps: () => Deps): Hono<AppEnv> {
     }
     return rt;
   };
+
+  // --- 画面（Vercel の静的配信に頼らず、関数のルートから返す）/ Screens, served from routes rather than relying on Vercel's static serving ---
+  app.use("*", async (c, next) => {
+    c.header("Content-Security-Policy", CONTENT_SECURITY_POLICY);
+    c.header("X-Content-Type-Options", "nosniff");
+    c.header("Referrer-Policy", "no-referrer");
+    c.header("X-Robots-Tag", "noindex, nofollow");
+    await next();
+  });
+
+  app.get("/", (c) => {
+    c.header("Cache-Control", "no-cache");
+    return c.html(INDEX_HTML);
+  });
+
+  app.get("/admin", (c) => {
+    c.header("Cache-Control", "no-cache");
+    return c.html(ADMIN_HTML);
+  });
 
   // --- すべてのAPI共通 / Applies to every API route ---
   app.use("/api/*", async (c, next) => {
