@@ -79,7 +79,7 @@ Vercel の関数は、リクエストごとに別のインスタンスで動く�
 | `AI_MODEL` | | anthropic: `claude-opus-5-5` / openai: `gpt-6.1-sol` | 安くしたい場合は `claude-sonnet-5-5` など |
 | `ACCESS_CODE` | 必須 | — | 参加者用の合言葉 |
 | `ADMIN_CODE` | 必須 | — | 講師用の合言葉 |
-| `MAX_TURNS_PER_PERSONA` | | `40` | 1人・1相手あたりの往復の上限 |
+| `MAX_TURNS_PER_PERSONA` | | `20` | 1人・1相手あたりの往復の上限 |
 | `DAILY_TOKEN_LIMIT` | | `3000000` | 1日の入力＋出力トークンの上限。超えたら全員の送信が止まる |
 | `LOG_DIR` | | `./logs` | ローカル実行時のログの出力先（Vercel では Redis に残る） |
 | `DATA_TTL_DAYS` | | `14` | 会話・ログを保持する日数 |

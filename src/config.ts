@@ -87,7 +87,7 @@ export function loadConfig(env: Env = process.env): Config {
     problems.push("ADMIN_CODE must differ from ACCESS_CODE");
   }
 
-  const maxTurns = positiveInt(env, "MAX_TURNS_PER_PERSONA", 40, problems);
+  const maxTurns = positiveInt(env, "MAX_TURNS_PER_PERSONA", 20, problems);
   const dailyTokenLimit = positiveInt(env, "DAILY_TOKEN_LIMIT", 3_000_000, problems);
   const ttlDays = positiveInt(env, "DATA_TTL_DAYS", 14, problems);
 

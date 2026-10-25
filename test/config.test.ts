@@ -22,7 +22,7 @@ describe("環境変数 / configuration", () => {
     expect(config).toMatchObject({
       provider: "anthropic",
       model: "claude-opus-5-5",
-      maxTurns: 40,
+      maxTurns: 20,
       dailyTokenLimit: 3_000_000,
       logDir: "./logs",
       timeZone: "Asia/Tokyo",
