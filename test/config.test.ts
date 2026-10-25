@@ -1,4 +1,6 @@
 import { execFileSync } from "node:child_process";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ConfigError, loadConfig } from "../src/config.js";
 import { estimateCostUsd } from "../src/pricing.js";
@@ -92,10 +94,23 @@ describe("人物設定 / personas", () => {
   it("「---」より下だけがシステムプロンプトになる / only the part below the --- line is the system prompt", () => {
     const [yamada, sato] = listPersonas();
     expect(yamada?.systemPrompt.startsWith("あなたは、架空の製造業「B社」")).toBe(true);
-    expect(sato?.systemPrompt.startsWith("あなたは、アスエネ")).toBe(true);
+    expect(sato?.systemPrompt.startsWith("あなたは、サービスX")).toBe(true);
     for (const persona of listPersonas()) {
       expect(persona.systemPrompt).not.toContain("このファイルの");
       expect(persona.systemPrompt).not.toMatch(/^---$/m);
+    }
+  });
+
+  it("実在の社名が人物設定に入っていない / no real company name in the personas", () => {
+    // 検査する語そのものをリポジトリに残さないよう、エスケープで書く
+    // Written as escapes so the checked words themselves are not stored in the repository
+    const forbidden = [/\u30a2\u30b9\u30a8\u30cd/, /\u0061suene/i, /\u0065arthene/i, /\u0072efutures/i];
+    const texts = [
+      ...listPersonas().flatMap((persona) => [persona.name, persona.description, persona.systemPrompt]),
+      ...readdirSync("personas").map((file) => readFileSync(join("personas", file), "utf8")),
+    ];
+    for (const text of texts) {
+      for (const pattern of forbidden) expect(text).not.toMatch(pattern);
     }
   });
 });
