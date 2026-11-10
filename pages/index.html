@@ -124,29 +124,90 @@
     .side-actions a.btn[aria-disabled="true"] { opacity: .5; pointer-events: none; }
 
     main.chat { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-    .chat-head { padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--surface); }
-    .chat-head .name { font-weight: 700; }
-    .chat-head .desc { color: var(--muted); font-size: 13px; }
+    /* ---- 相手（話している様子を見せる） / The persona, shown as someone who is talking ---- */
+    .stage {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--surface);
+    }
+    .stage-avatar { position: relative; width: 76px; height: 76px; flex: none; border-radius: 50%; transition: box-shadow .2s; }
+    .stage-avatar::after {
+      content: ""; position: absolute; inset: 0; border-radius: 50%;
+      border: 3px solid var(--accent); opacity: 0; pointer-events: none;
+    }
+    .stage[data-state="speaking"] .stage-avatar { box-shadow: 0 0 0 3px var(--accent); }
+    .stage[data-state="speaking"] .stage-avatar::after { animation: ring 1.5s ease-out infinite; }
+    .stage[data-state="thinking"] .stage-avatar { box-shadow: 0 0 0 3px var(--line); }
+    @keyframes ring { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.22); opacity: 0; } }
+    .stage-info { flex: 1; min-width: 0; }
+    .stage-info .name { font-weight: 700; font-size: 17px; }
+    .stage-info .desc { color: var(--muted); font-size: 13px; }
+    .status { display: flex; align-items: center; gap: 6px; margin-top: 4px; min-height: 20px; font-size: 13px; color: var(--muted); }
+    .stage[data-state="speaking"] .status { color: var(--accent); font-weight: 600; }
+    .status .wave, .status .typing { display: none; }
+    .stage[data-state="speaking"] .status .wave { display: inline-flex; }
+    .stage[data-state="thinking"] .status .typing { display: inline-flex; }
+    .wave { align-items: center; gap: 2px; height: 14px; }
+    .wave i { width: 3px; height: 100%; border-radius: 2px; background: currentColor; transform: scaleY(.35); animation: wave .9s ease-in-out infinite; }
+    .wave i:nth-child(2) { animation-delay: .15s; }
+    .wave i:nth-child(3) { animation-delay: .3s; }
+    .wave i:nth-child(4) { animation-delay: .45s; }
+    @keyframes wave { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+    .voice-btn { display: inline-flex; align-items: center; gap: 6px; flex: none; padding: 7px 11px; font-size: 13px; }
+    .voice-btn svg { width: 16px; height: 16px; }
+    .voice-btn .on { display: none; }
+    .voice-btn[aria-pressed="true"] { background: var(--ok-bg); color: var(--ok-text); border-color: transparent; }
+    .voice-btn[aria-pressed="true"] .on { display: inline; }
+    .voice-btn[aria-pressed="true"] .off { display: none; }
+
+    /* 似顔絵: 口・まばたき・考えているときの目線 / Portrait: mouth, blinking, eyes while thinking */
+    .avatar svg { display: block; width: 100%; height: 100%; border-radius: 50%; }
+    .avatar .mouth-open { display: none; }
+    .avatar.talking .mouth-closed { display: none; }
+    .avatar.talking .mouth-open { display: inline; transform-box: fill-box; transform-origin: center; animation: talk .2s ease-in-out infinite alternate; }
+    @keyframes talk { from { transform: scaleY(.3); } to { transform: scaleY(1); } }
+    .avatar .eyes { transform-box: fill-box; transform-origin: center; animation: eye-blink 5s infinite; }
+    @keyframes eye-blink { 0%, 95%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+    .avatar .gaze { transition: transform .3s; }
+    .avatar.thinking .gaze { transform: translate(1.6px, -2px); }
     .banner { margin: 0; padding: 10px 20px; font-size: 14px; }
     .banner.error { background: var(--danger-bg); color: var(--danger-text); }
     .banner.info { background: var(--ok-bg); color: var(--ok-text); }
 
     .log { flex: 1; min-height: 0; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
     .empty { margin: auto; max-width: 420px; text-align: center; color: var(--muted); }
-    .msg { max-width: min(680px, 86%); display: flex; flex-direction: column; gap: 2px; }
+    .msg { max-width: min(720px, 88%); display: flex; align-items: flex-start; gap: 10px; }
+    .msg-avatar { width: 38px; height: 38px; flex: none; margin-top: 18px; }
+    .msg-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .msg .who-label { font-size: 12px; color: var(--muted); }
     .msg .bubble {
-      padding: 10px 14px; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere;
-      background: var(--surface); border: 1px solid var(--line); border-top-left-radius: 4px;
+      position: relative; padding: 10px 14px; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere;
+      background: var(--surface); border: 1px solid var(--line);
     }
-    .msg.user { align-self: flex-end; align-items: flex-end; }
-    .msg.user .bubble { background: var(--user-bg); border-color: var(--user-bg); color: var(--user-text); border-top-left-radius: 14px; border-top-right-radius: 4px; }
+    /* 相手の吹き出しのしっぽ / Speech-bubble tail for the persona */
+    .msg.assistant .bubble::before {
+      content: ""; position: absolute; left: -6px; top: 13px; width: 10px; height: 10px;
+      background: var(--surface); border-left: 1px solid var(--line); border-bottom: 1px solid var(--line);
+      transform: rotate(45deg);
+    }
+    /* 話している途中のカーソル / Cursor while the persona is still talking */
+    .bubble.live::after {
+      content: ""; display: inline-block; width: 2px; height: 1.05em; margin-left: 2px; vertical-align: -0.18em;
+      background: currentColor; animation: caret 1s steps(1) infinite;
+    }
+    @keyframes caret { 50% { opacity: 0; } }
+    .msg.user { align-self: flex-end; }
+    .msg.user .msg-body { align-items: flex-end; }
+    .msg.user .bubble { background: var(--user-bg); border-color: var(--user-bg); color: var(--user-text); border-top-right-radius: 4px; }
     .typing { display: inline-flex; gap: 4px; align-items: center; height: 1.4em; }
     .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite ease-in-out; }
     .typing i:nth-child(2) { animation-delay: .2s; }
     .typing i:nth-child(3) { animation-delay: .4s; }
     @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
+    @media (prefers-reduced-motion: reduce) {
+      .typing i { animation: none; opacity: .6; }
+      .wave i, .avatar .eyes, .avatar.talking .mouth-open, .stage-avatar::after, .bubble.live::after { animation: none; }
+      .wave i { transform: scaleY(.7); }
+    }
 
     form.composer { display: flex; gap: 10px; align-items: flex-end; padding: 12px 20px 8px; background: var(--surface); border-top: 1px solid var(--line); }
     .composer textarea { flex: 1; resize: none; min-height: 46px; max-height: 160px; }
@@ -162,9 +223,14 @@
       .persona-btn { padding: 8px 10px; }
       .persona-btn .desc { display: none; }
       .side-actions { flex-direction: row; margin: 0; }
-      .msg { max-width: 94%; }
+      .msg { max-width: 96%; gap: 8px; }
+      .msg-avatar { width: 32px; height: 32px; }
       header.top { padding: 10px 12px; }
-      .log, .chat-head, .banner { padding-left: 12px; padding-right: 12px; }
+      .stage { gap: 12px; padding: 10px 12px; }
+      .stage-avatar { width: 56px; height: 56px; }
+      .stage-info .name { font-size: 16px; }
+      .stage-info .desc { font-size: 12px; }
+      .log, .banner { padding-left: 12px; padding-right: 12px; }
       form.composer { padding-left: 12px; padding-right: 12px; }
       .counter { padding-right: 12px; }
     }
@@ -204,9 +270,26 @@
     </aside>
 
     <main class="chat">
-      <div class="chat-head">
-        <div class="name" id="chat-name"></div>
-        <div class="desc" id="chat-desc"></div>
+      <div class="stage" id="stage" data-state="idle">
+        <div class="stage-avatar avatar" id="stage-avatar" aria-hidden="true"></div>
+        <div class="stage-info">
+          <div class="name" id="chat-name"></div>
+          <div class="desc" id="chat-desc"></div>
+          <div class="status">
+            <span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="typing" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span id="stage-status">あなたの質問を待っています</span>
+          </div>
+        </div>
+        <button class="btn voice-btn" id="voice-btn" type="button" aria-pressed="false" hidden
+                title="返答をブラウザの読み上げ機能で声に出します（音が出ます）">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 5 6 9H3v6h3l5 4z"/>
+            <path class="on" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>
+            <path class="off" d="m16 9 6 6m0-6-6 6"/>
+          </svg>
+          <span>読み上げ</span>
+        </button>
       </div>
       <p class="banner error" id="banner" role="alert" hidden></p>
       <div class="log" id="log" role="log" aria-live="polite" aria-label="会話"></div>
@@ -232,6 +315,7 @@
       personas: $("personas"), remaining: $("remaining"), resetBtn: $("reset-btn"), exportBtn: $("export-btn"),
       chatName: $("chat-name"), chatDesc: $("chat-desc"), banner: $("banner"), log: $("log"),
       composer: $("composer"), input: $("input"), send: $("send"), counter: $("counter"),
+      stage: $("stage"), stageAvatar: $("stage-avatar"), stageStatus: $("stage-status"), voiceBtn: $("voice-btn"),
     };
 
     const state = {
@@ -239,7 +323,296 @@
       current: null, busy: false,
       // 相手ごとの会話。サーバーが正で、ここは表示用の写し / Per-persona copy for display; the server is the source of truth
       convs: {},
+      // 相手の様子: idle（待っている）/ thinking（考えている）/ speaking（話している）/ What the persona is doing
+      phase: "idle",
+      // 文字を出している最中か（口を動かす） / Whether text is being revealed right now (moves the mouth)
+      mouthMoving: false,
     };
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    // ---------- 相手の似顔絵 ----------
+    // 架空の人物のイラスト。ここに無い相手（personas.json に足した人）は、共通の絵の色違いになる
+    // Illustrations of fictional people. Personas not listed here get the shared drawing in another colour.
+    const LOOKS = {
+      "b-company": { bg: "#d8e5f5", hair: "#2a2522", jacket: "#2e3d55", shirt: "#ffffff", extra: "glasses", pitch: 0.95 },
+      "cs": { bg: "#d9efe4", hair: "#5b3d2b", jacket: "#2d7a63", shirt: "#f5f2ea", extra: "headset", pitch: 1.1 },
+    };
+    const FALLBACK_LOOKS = [
+      { bg: "#f4e4d4", hair: "#3a2a20", jacket: "#7b4c30", shirt: "#ffffff", extra: null, pitch: 1 },
+      { bg: "#e7e1f4", hair: "#25222b", jacket: "#4b3f78", shirt: "#ffffff", extra: null, pitch: 1.05 },
+    ];
+
+    function lookFor(personaId) {
+      if (LOOKS[personaId]) return LOOKS[personaId];
+      const index = Math.max(0, state.personas.findIndex((p) => p.id === personaId));
+      return FALLBACK_LOOKS[index % FALLBACK_LOOKS.length];
+    }
+
+    function avatarSvg(look) {
+      const glasses = look.extra === "glasses"
+        ? `<g fill="none" stroke="#2b2b2b" stroke-width="1.5"><rect x="36" y="42.5" width="12" height="9" rx="3.5"/><rect x="52" y="42.5" width="12" height="9" rx="3.5"/><path d="M48 46.5h4"/></g>`
+        : "";
+      const headset = look.extra === "headset"
+        ? `<g fill="none" stroke="#33383f" stroke-linecap="round"><path d="M29.5 47C29.5 19 70.5 19 70.5 47" stroke-width="2.6"/><path d="M29 54c1.5 6 6.5 8.5 12 8" stroke-width="1.8"/></g>` +
+          `<g fill="#33383f"><rect x="25.5" y="42" width="7" height="13" rx="3"/><rect x="67.5" y="42" width="7" height="13" rx="3"/><circle cx="42.5" cy="62" r="2.2"/></g>`
+        : "";
+      return `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">` +
+        `<rect width="100" height="100" fill="${look.bg}"/>` +
+        `<path d="M14 104c0-21 16-33 36-33s36 12 36 33z" fill="${look.jacket}"/>` +
+        `<rect x="43.5" y="59" width="13" height="14" rx="5" fill="#e6b592"/>` +
+        `<path d="M42 71.5 50 83l8-11.5z" fill="${look.shirt}"/>` +
+        `<circle cx="31.5" cy="48" r="4.2" fill="#efc29f"/><circle cx="68.5" cy="48" r="4.2" fill="#efc29f"/>` +
+        `<ellipse cx="50" cy="46" rx="18.5" ry="20.5" fill="#f5cfad"/>` +
+        `<path d="M31 47c-2.5-17 6.5-25.5 19-25.5S71.5 30 69 47c-1.5-6-3.5-9.5-6.5-11.5-7 3.5-17.5 3.5-25.5-1-3 2.5-5 6.5-6 12.5z" fill="${look.hair}"/>` +
+        `<path d="M39 41.5q4-2.2 8 0M53 41.5q4-2.2 8 0" fill="none" stroke="${look.hair}" stroke-width="1.6" stroke-linecap="round"/>` +
+        `<g class="eyes"><g class="gaze" fill="#2b2b2b"><circle cx="42" cy="47" r="1.9"/><circle cx="58" cy="47" r="1.9"/></g></g>` +
+        `<circle cx="38.5" cy="53.5" r="2.6" fill="#f09a86" opacity=".35"/><circle cx="61.5" cy="53.5" r="2.6" fill="#f09a86" opacity=".35"/>` +
+        `<path class="mouth-closed" d="M45.5 56.5q4.5 3.2 9 0" fill="none" stroke="#9c4a3c" stroke-width="1.7" stroke-linecap="round"/>` +
+        `<ellipse class="mouth-open" cx="50" cy="57.5" rx="4" ry="3.2" fill="#8b3a2f"/>` +
+        glasses + headset +
+        `</svg>`;
+    }
+
+    // ---------- 相手の様子（待っている・考えている・話している） ----------
+    function refreshStage() {
+      const view = state.phase === "thinking" ? "thinking"
+        : state.phase === "speaking" || speech.pending > 0 ? "speaking"
+        : "idle";
+      els.stage.dataset.state = view;
+      els.stageStatus.textContent = { idle: "あなたの質問を待っています", thinking: "考えています", speaking: "話しています" }[view];
+      // 声が出ているあいだは声に、それ以外は文字の表示に口を合わせる / The mouth follows the voice while it plays, otherwise the text
+      const moving = speech.pending > 0 ? speech.talking : state.mouthMoving;
+      els.stageAvatar.classList.toggle("talking", view === "speaking" && moving);
+      els.stageAvatar.classList.toggle("thinking", view === "thinking");
+    }
+
+    // ---------- 返答を話す速さで見せる ----------
+    // サーバーから届いた文字を、1秒に約28文字ずつ出す。句読点では少し間を置く。遅れが大きいときは約1.5秒で追いつく
+    // Reveals streamed text at ~28 chars/s with short pauses at punctuation; when far behind it catches up within ~1.5 s
+    const CHARS_PER_SECOND = 28;
+    const PAUSE_MS = { "。": 300, "！": 300, "？": 300, "!": 300, "?": 300, "\n": 300, "、": 130, "，": 130, ",": 130 };
+
+    function createTypewriter(bubble, onMouth) {
+      let chars = [];
+      let shown = 0;
+      let budget = 0;
+      let last = 0;
+      let pauseUntil = 0;
+      let timer = null;
+      let complete = false;
+      let resolveDone = null;
+
+      const render = () => {
+        if (shown === 0) return; // 最初の文字までは「…」のまま / Keep the dots until the first character
+        bubble.textContent = chars.slice(0, shown).join("");
+        els.log.scrollTop = els.log.scrollHeight;
+      };
+      const settle = () => {
+        if (complete && shown >= chars.length && resolveDone) {
+          bubble.classList.remove("live");
+          resolveDone();
+          resolveDone = null;
+        }
+      };
+      const tick = () => {
+        timer = null;
+        const now = performance.now();
+        if (now < pauseUntil) {
+          last = now;
+          onMouth(false);
+          timer = setTimeout(tick, 30);
+          return;
+        }
+        const backlog = chars.length - shown;
+        if (backlog <= 0) {
+          onMouth(false);
+          settle();
+          return; // 次の文字が届いたら push で再開 / push() restarts the loop
+        }
+        const catchingUp = backlog > CHARS_PER_SECOND * 1.5;
+        const rate = catchingUp ? backlog / 1.5 : CHARS_PER_SECOND;
+        budget += ((now - last) / 1000) * rate;
+        last = now;
+        while (budget >= 1 && shown < chars.length) {
+          budget -= 1;
+          const ch = chars[shown++];
+          const isEnd = complete && shown === chars.length;
+          if (!catchingUp && PAUSE_MS[ch] && !isEnd) {
+            pauseUntil = now + PAUSE_MS[ch];
+            budget = 0;
+            break;
+          }
+        }
+        render();
+        onMouth(now >= pauseUntil);
+        timer = setTimeout(tick, 30);
+      };
+      const start = () => {
+        if (timer !== null) return;
+        last = performance.now();
+        timer = setTimeout(tick, 0);
+      };
+
+      return {
+        push(text) {
+          chars = Array.from(text);
+          if (shown > chars.length) shown = chars.length;
+          bubble.classList.add("live");
+          if (reduceMotion.matches) {
+            shown = chars.length;
+            render();
+            settle();
+            return;
+          }
+          start();
+        },
+        reset() {
+          chars = [];
+          shown = 0;
+          budget = 0;
+          pauseUntil = 0;
+          bubble.classList.remove("live");
+        },
+        // 全部出し終わったら解決する / Resolves once everything has been shown
+        finish() {
+          complete = true;
+          return new Promise((resolve) => {
+            resolveDone = resolve;
+            if (reduceMotion.matches) shown = chars.length;
+            render();
+            if (shown >= chars.length) settle();
+            else start();
+          });
+        },
+        stop() {
+          if (timer !== null) clearTimeout(timer);
+          timer = null;
+          bubble.classList.remove("live");
+          onMouth(false);
+          if (resolveDone) resolveDone();
+          resolveDone = null;
+        },
+      };
+    }
+
+    // ---------- 読み上げ（ブラウザの機能。音声はサーバーに送らない） ----------
+    // Read-aloud with the browser's built-in speech synthesis; nothing is sent to the server
+    const speech = {
+      supported: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window,
+      on: false,
+      voices: [],
+      gen: 0,        // やめたときに古い発話の通知を無視するための番号 / Bumped on stop so stale callbacks are ignored
+      pending: 0,    // 話し終わっていない文の数 / Sentences queued and not yet finished
+      queued: 0,     // 返答のうち、読み上げに回した文字数 / How much of the reply has been queued
+      talking: false,
+      watchdog: null,
+      utterances: new Set(), // 参照を持っておかないと、途中で止まるブラウザがある / Keep references; some browsers drop them mid-speech
+    };
+    const VOICE_KEY = "hearing-simulator:voice";
+    // macOS のおもしろ音声は除く / Skip macOS's novelty voices
+    const NOVELTY_VOICES = /^(Eddy|Flo|Grandma|Grandpa|Reed|Rocko|Sandy|Shelley|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox)\b/;
+
+    function loadVoices() {
+      const kind = (voice) =>
+        /Natural|Neural|Online/i.test(voice.name) ? 0
+        : /Google/i.test(voice.name) ? 1
+        : /Kyoko|Otoya|Hattori|O-ren|Haruka|Ayumi|Ichiro|Sayaka|Nanami|Keita/i.test(voice.name) ? 2
+        : 3;
+      // 同じ話者の高音質版があれば、そちらを先にする / Prefer the enhanced edition of the same speaker
+      const rank = (voice) => kind(voice) * 2 + (/拡張|Enhanced|Premium/i.test(voice.name) ? 0 : 1);
+      const speaker = (voice) => voice.name.replace(/[（(][^）)]*[）)]/g, "").trim();
+      const seen = new Set();
+      // 相手ごとに別の話者を割り当てたいので、同じ話者は1つだけ残す / Keep one voice per speaker so personas sound different
+      speech.voices = speechSynthesis.getVoices()
+        .filter((voice) => /^ja([-_]|$)/i.test(voice.lang) && !NOVELTY_VOICES.test(voice.name))
+        .sort((a, b) => rank(a) - rank(b))
+        .filter((voice) => !seen.has(speaker(voice)) && seen.add(speaker(voice)));
+      // 日本語の声が無い環境では、ボタンを出さない / Hide the toggle when no Japanese voice exists
+      els.voiceBtn.hidden = speech.voices.length === 0;
+    }
+
+    function setVoice(on) {
+      speech.on = on;
+      els.voiceBtn.setAttribute("aria-pressed", String(on));
+      try { localStorage.setItem(VOICE_KEY, on ? "on" : "off"); } catch { /* 保存できなくても動く / Works without storage */ }
+      if (!on) speakStop();
+    }
+
+    function speakStop() {
+      speech.gen += 1;
+      speech.pending = 0;
+      speech.queued = 0;
+      speech.talking = false;
+      speech.utterances.clear();
+      if (speech.watchdog !== null) clearInterval(speech.watchdog);
+      speech.watchdog = null;
+      if (speech.supported) speechSynthesis.cancel();
+      refreshStage();
+    }
+
+    // 届いた返答のうち、文の終わりまでそろった分を順に読み上げる / Queue each complete sentence as it arrives
+    function speakFeed(text, final, personaId) {
+      if (!speech.on || speech.voices.length === 0) return;
+      const rest = text.slice(speech.queued);
+      const sentence = /[^。！？!?\n]*[。！？!?\n]+/gu;
+      let used = 0;
+      for (let match; (match = sentence.exec(rest)); ) {
+        speakSentence(match[0], personaId);
+        used = sentence.lastIndex;
+      }
+      speech.queued += used;
+      if (final) {
+        speakSentence(text.slice(speech.queued), personaId);
+        speech.queued = text.length;
+      }
+    }
+
+    function speakSentence(text, personaId) {
+      const words = text.trim();
+      if (!words) return;
+      const utterance = new SpeechSynthesisUtterance(words);
+      // 相手ごとに別の声にする（声が1つしか無ければ高さだけ変える） / A different voice per persona when available
+      const index = Math.max(0, state.personas.findIndex((p) => p.id === personaId));
+      utterance.voice = speech.voices[index % speech.voices.length];
+      utterance.lang = utterance.voice.lang;
+      utterance.pitch = lookFor(personaId).pitch;
+      utterance.rate = 1.1;
+      const gen = speech.gen;
+      const end = () => {
+        speech.utterances.delete(utterance);
+        if (gen !== speech.gen) return;
+        speech.pending = Math.max(0, speech.pending - 1);
+        if (speech.pending === 0) speech.talking = false;
+        refreshStage();
+      };
+      utterance.onstart = () => {
+        if (gen !== speech.gen) return;
+        speech.talking = true;
+        refreshStage();
+      };
+      utterance.onend = end;
+      utterance.onerror = end;
+      speech.pending += 1;
+      speech.utterances.add(utterance);
+      speechSynthesis.speak(utterance);
+      // 音が出せない環境では終わりの通知が来ないことがあるので、実際に止まっていたら片付ける
+      // Some environments never fire onend (e.g. no audio device); clean up once synthesis has actually stopped
+      if (speech.watchdog === null) {
+        speech.watchdog = setInterval(() => {
+          if (speech.pending > 0 && !speechSynthesis.speaking && !speechSynthesis.pending) {
+            speech.pending = 0;
+            speech.talking = false;
+            refreshStage();
+          }
+          if (speech.pending === 0) {
+            clearInterval(speech.watchdog);
+            speech.watchdog = null;
+          }
+        }, 1000);
+      }
+      refreshStage();
+    }
 
     const codePoints = (text) => Array.from(text).length;
 
@@ -331,7 +704,9 @@
       const persona = currentPersona();
       els.chatName.textContent = persona.name;
       els.chatDesc.textContent = persona.description;
+      els.stageAvatar.innerHTML = avatarSvg(lookFor(id));
       els.exportBtn.href = `/api/chat/${encodeURIComponent(id)}/export`;
+      speakStop();
       hideBanner();
       renderMessages();
       renderRemaining();
@@ -341,6 +716,15 @@
     function addMessageEl(role, text, pending) {
       const wrap = document.createElement("div");
       wrap.className = `msg ${role}`;
+      if (role !== "user") {
+        const avatar = document.createElement("div");
+        avatar.className = "msg-avatar avatar";
+        avatar.setAttribute("aria-hidden", "true");
+        avatar.innerHTML = avatarSvg(lookFor(state.current));
+        wrap.append(avatar);
+      }
+      const body = document.createElement("div");
+      body.className = "msg-body";
       const label = document.createElement("div");
       label.className = "who-label";
       label.textContent = role === "user" ? "あなた" : currentPersona().name;
@@ -348,7 +732,8 @@
       bubble.className = "bubble";
       if (pending && !text) bubble.append(typingDots());
       else bubble.textContent = text;
-      wrap.append(label, bubble);
+      body.append(label, bubble);
+      wrap.append(body);
       els.log.append(wrap);
       els.log.scrollTop = els.log.scrollHeight;
       return bubble;
@@ -417,16 +802,26 @@
       if (!text || state.busy) return;
 
       hideBanner();
+      speakStop();
       state.busy = true;
+      state.phase = "thinking";
       updateControls();
+      refreshStage();
 
       // 初回は案内文を消す / drop the empty-state hint on first message
       const empty = els.log.querySelector(".empty");
       if (empty) empty.remove();
       addMessageEl("user", text, false);
       const bubble = addMessageEl("assistant", "", true);
+      const typewriter = createTypewriter(bubble, (moving) => {
+        if (state.mouthMoving === moving) return;
+        state.mouthMoving = moving;
+        refreshStage();
+      });
       let streamed = "";
       let finished = false;
+      // 文字を少しずつ出すあいだ、読み上げソフトには出し終わってから伝える / Let screen readers wait until the reveal is done
+      els.log.setAttribute("aria-busy", "true");
 
       try {
         const res = await api(`/api/chat/${encodeURIComponent(personaId)}`, {
@@ -450,15 +845,25 @@
         const handle = (event, data) => {
           if (event === "delta") {
             streamed += data.text;
-            bubble.textContent = streamed;
-            els.log.scrollTop = els.log.scrollHeight;
+            state.phase = "speaking";
+            typewriter.push(streamed);
+            speakFeed(streamed, false, personaId);
+            refreshStage();
           } else if (event === "reset") {
+            // サーバーが別のAIで最初から作り直した / The server restarted the reply (e.g. on a fallback model)
             streamed = "";
+            typewriter.reset();
+            speakStop();
             bubble.textContent = "";
             bubble.append(typingDots());
+            state.phase = "thinking";
+            refreshStage();
           } else if (event === "done") {
             finished = true;
-            bubble.textContent = data.text;
+            state.phase = "speaking";
+            typewriter.push(data.text);
+            speakFeed(data.text, true, personaId);
+            refreshStage();
             const conv = state.convs[personaId] || { messages: [], remaining: state.maxTurns };
             conv.messages.push({ role: "user", text }, { role: "assistant", text: data.text });
             conv.remaining = data.remaining;
@@ -485,19 +890,27 @@
           }
         }
         if (!finished) throw new Error("通信が途切れました。もう一度送ってください");
+        // 話し終わるまで待つ（遅れていても約1.5秒で追いつく） / Wait until the reply has been fully shown
+        await typewriter.finish();
       } catch (error) {
         // 失敗した発言は履歴に残らない。入力欄へ戻して、サーバーの状態に表示を合わせる
         // A failed message is not persisted: put it back in the box and re-sync the view with the server
+        typewriter.stop();
+        speakStop();
         showBanner(error instanceof Error ? error.message : "エラーが発生しました。もう一度送ってください");
         await loadHistory(personaId);
       } finally {
         state.busy = false;
+        state.phase = "idle";
+        state.mouthMoving = false;
+        els.log.removeAttribute("aria-busy");
         if (state.current === personaId) {
           renderMessages();
           renderRemaining();
           els.input.focus();
         }
         updateControls();
+        refreshStage();
       }
     }
 
@@ -555,6 +968,7 @@
       if (!res.ok) return showBanner(await errorMessage(res));
       const data = await res.json();
       state.convs[persona.id] = { messages: [], remaining: data.remaining };
+      speakStop();
       hideBanner();
       renderMessages();
       renderRemaining();
@@ -563,6 +977,17 @@
     els.exportBtn.addEventListener("click", (event) => {
       if (els.exportBtn.getAttribute("aria-disabled") === "true") event.preventDefault();
     });
+
+    els.voiceBtn.addEventListener("click", () => setVoice(!speech.on));
+
+    // 読み上げは既定でオフ。前回オンにしていたら引き継ぐ / Read-aloud is off by default; remember the last choice
+    if (speech.supported) {
+      try { speech.on = localStorage.getItem(VOICE_KEY) === "on"; } catch { speech.on = false; }
+      els.voiceBtn.setAttribute("aria-pressed", String(speech.on));
+      loadVoices();
+      // 声の一覧は後から届くことがある / The voice list can arrive later
+      speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    }
 
     // ---------- 起動 ----------
     (async function init() {

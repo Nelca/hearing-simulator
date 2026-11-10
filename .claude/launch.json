@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "hearing-simulator-mock",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "AI_PROVIDER=mock",
+        "ACCESS_CODE=local-test",
+        "ADMIN_CODE=local-admin-test",
+        "PORT=3100",
+        "pnpm", "exec", "tsx", "src/dev.ts"
+      ],
+      "port": 3100
+    }
+  ]
+}
